@@ -1,50 +1,32 @@
-import Database from 'better-sqlite3';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import path from 'path';
 
-const dbPath = path.join(process.cwd(), 'data', 'tft.db');
+const dataDir = path.join(process.cwd(), 'data');
+const dbPath = path.join(dataDir, 'data.json');
 
-let db: Database.Database | null = null;
-
-export function getDb() {
-  if (!db) {
-    db = new Database(dbPath);
-    db.pragma('journal_mode = WAL');
-    initializeSchema();
-  }
-  return db;
+interface DbData {
+  requests: NoticeRequest[];
+  files: FileRecord[];
 }
 
-function initializeSchema() {
-  const db = getDb();
+export function getDb(): DbData {
+  try {
+    if (existsSync(dbPath)) {
+      const data = readFileSync(dbPath, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.log('DB file not found, creating new one');
+  }
+  
+  return { requests: [], files: [] };
+}
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS requests (
-      id TEXT PRIMARY KEY,
-      team TEXT NOT NULL,
-      leader_name TEXT NOT NULL,
-      title TEXT NOT NULL,
-      content TEXT NOT NULL,
-      scheduled_date TEXT NOT NULL,
-      status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'approved', 'completed')),
-      created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS files (
-      id TEXT PRIMARY KEY,
-      request_id TEXT NOT NULL,
-      file_name TEXT NOT NULL,
-      file_path TEXT NOT NULL,
-      file_type TEXT NOT NULL,
-      file_size INTEGER NOT NULL,
-      created_at TEXT NOT NULL,
-      FOREIGN KEY (request_id) REFERENCES requests(id) ON DELETE CASCADE
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_requests_status ON requests(status);
-    CREATE INDEX IF NOT EXISTS idx_requests_team ON requests(team);
-    CREATE INDEX IF NOT EXISTS idx_files_request ON files(request_id);
-  `);
+export function saveDb(data: DbData) {
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true });
+  }
+  writeFileSync(dbPath, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 export type NoticeRequest = {
