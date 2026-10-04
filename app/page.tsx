@@ -10,6 +10,8 @@ type NoticeRequest = {
   leader_name: string;
   title: string;
   content: string;
+  title_en?: string;
+  content_en?: string;
   scheduled_date: string;
   status: Status;
   created_at: string;
@@ -50,6 +52,8 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
     leader_name: '',
     title: '',
     content: '',
+    title_en: '',
+    content_en: '',
     scheduled_date: '',
   });
   const [files, setFiles] = useState<File[]>([]);
@@ -97,6 +101,8 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
       form.append('leader_name', formData.leader_name);
       form.append('title', `${TITLE_PREFIX} ${formData.title.trim()}`);
       form.append('content', formData.content);
+      form.append('title_en', formData.title_en);
+      form.append('content_en', formData.content_en);
       form.append('scheduled_date', formData.scheduled_date);
       files.forEach(file => form.append('files', file));
 
@@ -183,6 +189,33 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
             />
             <p className="mt-2 text-xs leading-5 text-muted">
               인사말, 마지막 성경 구절, 시그니처는 고정으로 들어가요. 본문 내용만 적어주세요.
+            </p>
+          </div>
+
+          <div>
+            <Label optional>영문 공지 제목</Label>
+            <input
+              type="text"
+              name="title_en"
+              value={formData.title_en}
+              onChange={handleChange}
+              placeholder="English title"
+              className={fieldClass}
+            />
+          </div>
+
+          <div>
+            <Label optional>영문 공지 내용</Label>
+            <textarea
+              name="content_en"
+              value={formData.content_en}
+              onChange={handleChange}
+              placeholder="English content"
+              rows={5}
+              className={`${fieldClass} resize-none`}
+            />
+            <p className="mt-2 text-xs leading-5 text-muted">
+              영문 공지가 필요할 때만 적어주세요. 인사말, 성경 구절, 시그니처는 여기도 고정으로 들어가요.
             </p>
           </div>
 
@@ -415,13 +448,29 @@ export default function Home() {
                   >
                     {request.content}
                   </p>
-                  {request.content.length > 80 && (
+                  {(request.content.length > 80 || (request.content_en?.length ?? 0) > 80) && (
                     <button
                       onClick={() => setExpanded(isOpen ? null : request.id)}
                       className="mt-1 text-sm font-semibold text-primary"
                     >
                       {isOpen ? '접기' : '더보기'}
                     </button>
+                  )}
+
+                  {(request.title_en || request.content_en) && (
+                    <div className="mt-4 rounded-[14px] bg-surface p-4">
+                      <p className="mb-1 text-xs font-semibold text-primary">English</p>
+                      {request.title_en && (
+                        <p className="text-sm font-semibold text-foreground">{request.title_en}</p>
+                      )}
+                      {request.content_en && (
+                        <p
+                          className={`mt-1 whitespace-pre-wrap text-sm leading-6 text-body ${isOpen ? '' : 'line-clamp-3'}`}
+                        >
+                          {request.content_en}
+                        </p>
+                      )}
+                    </div>
                   )}
 
                   {files.length > 0 && (

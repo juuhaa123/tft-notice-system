@@ -11,6 +11,8 @@ export async function POST(request: NextRequest) {
     const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = formData.get('content') as string;
     const scheduled_date = formData.get('scheduled_date') as string;
+    const title_en = ((formData.get('title_en') as string) || '').trim();
+    const content_en = ((formData.get('content_en') as string) || '').trim();
 
     const titleBody = rawTitle.replace(/^(\[2026 창문축제 TFT\]|\[창문축제\])\s*/, '').trim();
     const title = `[2026 창문축제 TFT] ${titleBody}`;
@@ -32,6 +34,8 @@ export async function POST(request: NextRequest) {
       leader_name,
       title,
       content,
+      ...(title_en && { title_en }),
+      ...(content_en && { content_en }),
       scheduled_date,
       status: 'pending',
       created_at: now,
