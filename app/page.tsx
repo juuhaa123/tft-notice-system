@@ -40,6 +40,11 @@ function Label({ children, required, optional }: { children: React.ReactNode; re
   );
 }
 
+function formatDay(value: string) {
+  const m = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  return m ? `${Number(m[2])}월 ${Number(m[3])}일` : value;
+}
+
 function formatDate(value: string) {
   const d = new Date(value);
   if (isNaN(d.getTime())) return value;
@@ -222,7 +227,7 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
           <div>
             <Label required>게시 희망 일자</Label>
             <input
-              type="datetime-local"
+              type="date"
               name="scheduled_date"
               value={formData.scheduled_date}
               onChange={handleChange}
@@ -448,7 +453,7 @@ export default function Home() {
                     <span>{request.leader_name}</span>
                   </div>
                   <h2 className={`text-lg font-semibold ${done ? 'text-muted' : 'text-foreground'}`}>{request.title}</h2>
-                  <p className="mt-1 text-sm text-body">게시 희망 {formatDate(request.scheduled_date)}</p>
+                  <p className="mt-1 text-sm text-body">게시 희망 {formatDay(request.scheduled_date)}</p>
 
                   <p
                     className={`mt-3 whitespace-pre-wrap text-sm leading-6 text-body ${isOpen ? '' : 'line-clamp-3'}`}
