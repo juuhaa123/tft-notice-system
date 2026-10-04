@@ -4,7 +4,7 @@ import path from 'path';
 
 const DB_PATHNAME = 'tft/data.json';
 const UPLOAD_PREFIX = 'tft/uploads/';
-const useBlob = () => !!process.env.BLOB_READ_WRITE_TOKEN;
+const useBlob = () => !!(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 const localPath = (pathname: string) => path.join(process.cwd(), 'data', pathname);
 
 export type NoticeRequest = {
