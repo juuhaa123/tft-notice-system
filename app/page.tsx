@@ -419,7 +419,7 @@ export default function Home() {
           <div className="mt-5 rounded-[14px] bg-surface p-4">
             <p className="mb-2 text-sm font-semibold text-foreground">포스터를 본문 속에 넣고 싶다면</p>
             <ol className="list-inside list-decimal space-y-1 text-sm leading-6 text-body">
-              <li>첨부파일 칸에 포스터 사진과 포스터 파일을 올려주세요.</li>
+              <li>포스터를 PNG와 PDF로 함께 첨부해주세요.</li>
               <li>공지 내용에서 포스터가 들어갈 자리에 (포스터)라고 적어주세요.</li>
             </ol>
           </div>
