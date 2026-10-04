@@ -7,16 +7,6 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const token = new URL(request.url).searchParams.get('token');
-    const adminToken = process.env.ADMIN_TOKEN || 'admin-token';
-
-    if (token !== adminToken) {
-      return NextResponse.json(
-        { error: '권한이 없습니다' },
-        { status: 403 }
-      );
-    }
-
     const db = await getDb();
     const request_data = db.requests.find(r => r.id === id);
 

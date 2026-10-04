@@ -8,11 +8,14 @@ export async function POST(request: NextRequest) {
 
     const team = formData.get('team') as string;
     const leader_name = formData.get('leader_name') as string;
-    const title = formData.get('title') as string;
+    const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = formData.get('content') as string;
     const scheduled_date = formData.get('scheduled_date') as string;
 
-    if (!team || !leader_name || !title || !content || !scheduled_date) {
+    const titleBody = rawTitle.replace(/^(\[2026 창문축제 TFT\]|\[창문축제\])\s*/, '').trim();
+    const title = `[2026 창문축제 TFT] ${titleBody}`;
+
+    if (!team || !leader_name || !titleBody || !content || !scheduled_date) {
       return NextResponse.json(
         { error: '필수 필드를 입력해주세요' },
         { status: 400 }
@@ -82,9 +85,9 @@ export async function GET(request: NextRequest) {
     const isAdmin = token === adminToken;
 
     const db = await getDb();
-    let rows = isAdmin ? [...db.requests] : [];
+    let rows = [...db.requests];
 
-    if (status && isAdmin) {
+    if (status) {
       rows = rows.filter(r => r.status === status);
     }
 
