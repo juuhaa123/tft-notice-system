@@ -407,10 +407,17 @@ export default function Home() {
           <p className="mb-3 inline-block rounded-lg bg-weak px-3 py-1 text-sm font-semibold text-weak-fg">
             창문축제 TFT
           </p>
-          <h1 className="text-4xl font-bold leading-[1.5] text-foreground">공지 의뢰 목록</h1>
+          <h1 className="text-4xl font-bold leading-[1.5] text-foreground">히즈넷 공지 의뢰 목록</h1>
           <p className="mt-2 text-base text-body">
             전체 {requests.length}건 · 게시 대기 <span className="font-semibold text-primary">{pendingCount}</span>건
           </p>
+          <div className="mt-5 rounded-[14px] bg-surface p-4">
+            <p className="mb-2 text-sm font-semibold text-foreground">포스터를 본문 속에 넣고 싶다면</p>
+            <ol className="list-inside list-decimal space-y-1 text-sm leading-6 text-body">
+              <li>첨부파일 칸에 포스터 사진과 포스터 파일을 올려주세요.</li>
+              <li>공지 내용에서 포스터가 들어갈 자리에 (포스터)라고 적어주세요.</li>
+            </ol>
+          </div>
           {isAdmin && (
             <div className="mt-4 flex items-center justify-between rounded-[14px] bg-weak px-4 py-3 text-sm font-semibold text-weak-fg">
               <span>관리자 모드 · 게시 후 완료로 표시해 주세요</span>
