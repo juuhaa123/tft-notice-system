@@ -7,7 +7,17 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const db = getDb();
+    const token = new URL(request.url).searchParams.get('token');
+    const adminToken = process.env.ADMIN_TOKEN || 'admin-token';
+
+    if (token !== adminToken) {
+      return NextResponse.json(
+        { error: '권한이 없습니다' },
+        { status: 403 }
+      );
+    }
+
+    const db = await getDb();
     const request_data = db.requests.find(r => r.id === id);
 
     if (!request_data) {
@@ -57,9 +67,9 @@ export async function PATCH(
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     const now = new Date().toISOString();
-    
+
     const requestIndex = db.requests.findIndex(r => r.id === id);
     if (requestIndex === -1) {
       return NextResponse.json(
@@ -70,7 +80,7 @@ export async function PATCH(
 
     db.requests[requestIndex].status = status as 'pending' | 'approved' | 'completed';
     db.requests[requestIndex].updated_at = now;
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({
       message: '요청이 업데이트되었습니다'
@@ -100,10 +110,10 @@ export async function DELETE(
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     db.requests = db.requests.filter(r => r.id !== id);
     db.files = db.files.filter(f => f.request_id !== id);
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json({
       message: '요청이 삭제되었습니다'

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, saveDb, NoticeRequest } from '@/lib/db';
+import { getDb, saveDb, saveUpload, NoticeRequest } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import { existsSync } from 'fs';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getDb();
+    const db = await getDb();
     const id = uuidv4();
     const now = new Date().toISOString();
 
@@ -40,34 +37,27 @@ export async function POST(request: NextRequest) {
 
     db.requests.push(newRequest);
 
+    // 파일 처리
     const files = formData.getAll('files') as File[];
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-
-    if (!existsSync(uploadDir)) {
-      await mkdir(uploadDir, { recursive: true });
-    }
 
     for (const file of files) {
       const bytes = await file.arrayBuffer();
       const buffer = Buffer.from(bytes);
       const fileId = uuidv4();
-      const fileName = `${fileId}-${file.name}`;
-      const filePath = path.join(uploadDir, fileName);
-
-      await writeFile(filePath, buffer);
+      const storedPath = await saveUpload(fileId, file.name, buffer, file.type);
 
       db.files.push({
         id: fileId,
         request_id: id,
         file_name: file.name,
-        file_path: `/uploads/${fileName}`,
+        file_path: storedPath,
         file_type: file.type,
         file_size: buffer.length,
         created_at: now,
       });
     }
 
-    saveDb(db);
+    await saveDb(db);
 
     return NextResponse.json(
       { id, message: '공지 요청이 등록되었습니다' },
@@ -91,8 +81,8 @@ export async function GET(request: NextRequest) {
     const adminToken = process.env.ADMIN_TOKEN || 'admin-token';
     const isAdmin = token === adminToken;
 
-    const db = getDb();
-    let rows = db.requests;
+    const db = await getDb();
+    let rows = isAdmin ? [...db.requests] : [];
 
     if (status && isAdmin) {
       rows = rows.filter(r => r.status === status);

@@ -2,7 +2,6 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import DreamersLogo from '@/components/DreamersLogo';
 
 type Status = 'pending' | 'approved' | 'completed';
 
@@ -32,16 +31,13 @@ const STATUS_LABELS: Record<Status, string> = {
 };
 
 const STATUS_BADGE: Record<Status, string> = {
-  pending: 'bg-dream-yellow text-black',
-  approved: 'bg-dream-purple text-black',
-  completed: 'bg-dream-green text-black',
+  pending: 'bg-surface text-body',
+  approved: 'bg-weak text-weak-fg',
+  completed: 'bg-primary text-white',
 };
 
-const STATUS_BORDER: Record<Status, string> = {
-  pending: 'border-l-dream-yellow',
-  approved: 'border-l-dream-purple',
-  completed: 'border-l-dream-green',
-};
+const fieldClass =
+  'w-full rounded-[14px] border border-line bg-canvas px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 
 function AdminDashboard() {
   const searchParams = useSearchParams();
@@ -135,7 +131,7 @@ function AdminDashboard() {
 
   const handleViewDetails = async (requestId: string) => {
     try {
-      const response = await fetch(`/api/requests/${requestId}`);
+      const response = await fetch(`/api/requests/${requestId}?token=${token}`);
       const data = await response.json();
       setSelectedRequest(data.data);
     } catch (error) {
@@ -148,63 +144,66 @@ function AdminDashboard() {
 
   if (showTokenModal && !isAuthorized) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-ground p-5">
+      <div className="flex min-h-screen items-center justify-center bg-canvas p-5">
         <div className="w-full max-w-md">
-          <DreamersLogo className="mx-auto mb-6 w-64" />
-          <div className="rounded-[2rem] bg-paper p-8 text-black">
-            <h1 className="mb-6 font-display text-2xl">관리자 로그인</h1>
-            <form onSubmit={handleTokenSubmit} className="space-y-4">
-              <div>
-                <label className="mb-2 block font-bold">관리자 토큰</label>
-                <input
-                  type="password"
-                  value={token}
-                  onChange={e => setToken(e.target.value)}
-                  placeholder="토큰을 입력하세요"
-                  className="w-full rounded-2xl border-2 border-black/10 bg-white px-4 py-3 focus:border-dream-pink focus:outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full rounded-full bg-black py-3 font-bold text-dream-yellow transition hover:bg-dream-pink hover:text-black"
-              >
-                로그인
-              </button>
-            </form>
-          </div>
+          <h1 className="mb-8 text-3xl font-bold leading-[1.5] text-foreground">
+            관리자 확인을
+            <br />
+            해주세요
+          </h1>
+          <form onSubmit={handleTokenSubmit} className="space-y-4">
+            <div>
+              <label className="mb-2 block text-sm font-semibold text-body">관리자 토큰</label>
+              <input
+                type="password"
+                value={token}
+                onChange={e => setToken(e.target.value)}
+                placeholder="토큰을 입력하세요"
+                className={fieldClass}
+              />
+            </div>
+            <button
+              type="submit"
+              className="h-14 w-full rounded-2xl bg-primary px-5 text-[17px] font-semibold text-white transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+            >
+              로그인
+            </button>
+          </form>
         </div>
       </div>
     );
   }
 
   if (!isAuthorized) {
-    return <div className="min-h-screen bg-ground" />;
+    return <div className="min-h-screen bg-canvas" />;
   }
 
   return (
-    <div className="min-h-screen bg-ground">
-      <header className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-5 pb-4 pt-8">
+    <div className="min-h-screen bg-canvas">
+      <header className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-3 px-5 pb-6 pt-10">
         <div>
-          <DreamersLogo className="w-52" />
-          <h1 className="mt-2 font-display text-3xl text-paper">
-            공지 요청 관리<span className="text-dream-yellow">.</span>
-          </h1>
+          <p className="mb-2 inline-block rounded-lg bg-weak px-3 py-1 text-sm font-semibold text-weak-fg">
+            관리자
+          </p>
+          <h1 className="text-4xl font-bold leading-[1.5] text-foreground">공지 요청 관리</h1>
         </div>
-        <p className="rounded-full bg-paper px-4 py-2 font-bold text-black">총 {requests.length}개의 요청</p>
+        <p className="text-base text-body">
+          총 <span className="font-semibold text-primary">{requests.length}</span>개의 요청
+        </p>
       </header>
 
-      <main className="mx-auto max-w-7xl px-5 pb-12 pt-4">
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <main className="mx-auto max-w-6xl px-5 pb-16">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <div className="mb-5 flex gap-2 overflow-x-auto">
               {(['all', 'pending', 'approved', 'completed'] as const).map(status => (
                 <button
                   key={status}
                   onClick={() => setSelectedStatus(status)}
-                  className={`whitespace-nowrap rounded-full px-5 py-2 font-bold transition ${
+                  className={`h-10 whitespace-nowrap rounded-[10px] px-4 text-[15px] font-semibold transition ${
                     selectedStatus === status
-                      ? 'bg-dream-pink text-black'
-                      : 'bg-white/10 text-paper hover:bg-white/20'
+                      ? 'bg-foreground text-white'
+                      : 'bg-surface text-body hover:bg-line'
                   }`}
                 >
                   {status === 'all' ? '전체' : STATUS_LABELS[status]}
@@ -212,59 +211,59 @@ function AdminDashboard() {
               ))}
             </div>
 
-            {loading && <p className="mb-3 text-paper/60">불러오는 중...</p>}
+            {loading && <p className="mb-3 text-sm text-muted">불러오는 중...</p>}
 
             <div className="space-y-3">
               {filteredRequests.map(request => (
                 <div
                   key={request.id}
-                  className={`cursor-pointer rounded-2xl border-l-8 bg-white/5 p-4 transition hover:bg-white/10 ${STATUS_BORDER[request.status]} ${
-                    selectedRequest?.id === request.id ? 'bg-white/10 ring-2 ring-dream-yellow' : ''
+                  className={`cursor-pointer rounded-2xl border p-5 transition hover:bg-surface ${
+                    selectedRequest?.id === request.id ? 'border-primary bg-weak/40' : 'border-line bg-canvas'
                   }`}
                   onClick={() => handleViewDetails(request.id)}
                 >
-                  <div className="mb-2 flex items-center gap-3">
-                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS_BADGE[request.status]}`}>
+                  <div className="mb-3 flex items-center gap-2">
+                    <span className={`rounded-md px-2 py-1 text-xs font-semibold ${STATUS_BADGE[request.status]}`}>
                       {STATUS_LABELS[request.status]}
                     </span>
-                    <span className="text-sm text-paper/70">{request.team}</span>
+                    <span className="text-sm text-muted">{request.team}</span>
                   </div>
-                  <h3 className="text-lg font-bold text-paper">{request.title}</h3>
-                  <p className="mt-1 text-sm text-paper/70">팀장: {request.leader_name}</p>
-                  <p className="mt-1 text-xs text-paper/50">
+                  <h3 className="text-lg font-semibold text-foreground">{request.title}</h3>
+                  <p className="mt-1 text-sm text-body">팀장 {request.leader_name}</p>
+                  <p className="mt-1 text-xs text-muted">
                     {new Date(request.created_at).toLocaleString('ko-KR')}
                   </p>
                 </div>
               ))}
 
               {filteredRequests.length === 0 && (
-                <div className="rounded-2xl bg-white/5 p-8 text-center text-paper/60">요청이 없습니다</div>
+                <div className="rounded-2xl bg-surface p-10 text-center text-body">요청이 없어요</div>
               )}
             </div>
           </div>
 
           <div className="lg:col-span-1">
             {selectedRequest ? (
-              <div className="sticky top-4 rounded-[2rem] bg-paper p-6 text-black">
-                <h2 className="mb-4 font-display text-xl">상세 정보</h2>
+              <div className="sticky top-4 rounded-2xl bg-surface p-6">
+                <h2 className="mb-5 text-[22px] font-semibold leading-[1.5] text-foreground">상세 정보</h2>
 
-                <div className="space-y-4">
+                <div className="space-y-5">
                   <div>
-                    <p className="text-sm font-bold text-black/50">팀</p>
-                    <p>{selectedRequest.team}</p>
+                    <p className="text-sm text-muted">팀</p>
+                    <p className="text-foreground">{selectedRequest.team}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm font-bold text-black/50">팀장</p>
-                    <p>{selectedRequest.leader_name}</p>
+                    <p className="text-sm text-muted">팀장</p>
+                    <p className="text-foreground">{selectedRequest.leader_name}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm font-bold text-black/50">상태</p>
+                    <p className="mb-1 text-sm text-muted">상태</p>
                     <select
                       value={selectedRequest.status}
                       onChange={e => handleStatusChange(selectedRequest.id, e.target.value as Status)}
-                      className="mt-1 w-full rounded-2xl border-2 border-black/10 bg-white px-3 py-2 focus:border-dream-pink focus:outline-none"
+                      className={fieldClass}
                     >
                       <option value="pending">대기중</option>
                       <option value="approved">승인됨</option>
@@ -273,20 +272,21 @@ function AdminDashboard() {
                   </div>
 
                   <div>
-                    <p className="text-sm font-bold text-black/50">게시 희망 일자</p>
-                    <p className="text-sm">{new Date(selectedRequest.scheduled_date).toLocaleString('ko-KR')}</p>
+                    <p className="text-sm text-muted">게시 희망 일자</p>
+                    <p className="text-sm text-foreground">
+                      {new Date(selectedRequest.scheduled_date).toLocaleString('ko-KR')}
+                    </p>
                   </div>
 
                   {selectedRequest.files && selectedRequest.files.length > 0 && (
                     <div>
-                      <p className="mb-2 text-sm font-bold text-black/50">첨부파일</p>
+                      <p className="mb-2 text-sm text-muted">첨부파일</p>
                       <div className="space-y-2">
                         {selectedRequest.files.map(file => (
                           <a
                             key={file.id}
-                            href={file.file_path}
-                            download
-                            className="block break-all rounded-2xl bg-white px-3 py-2 text-sm font-bold underline decoration-dream-pink decoration-2 underline-offset-4 hover:bg-dream-yellow"
+                            href={`/api/files?path=${encodeURIComponent(file.file_path)}&name=${encodeURIComponent(file.file_name)}&token=${encodeURIComponent(token)}`}
+                            className="block break-all rounded-[10px] bg-weak px-3 py-2.5 text-sm font-semibold text-weak-fg hover:bg-canvas"
                           >
                             {file.file_name}
                           </a>
@@ -296,22 +296,22 @@ function AdminDashboard() {
                   )}
 
                   <div>
-                    <p className="mb-2 text-sm font-bold text-black/50">공지 내용</p>
-                    <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-2xl bg-white p-3 text-sm">
+                    <p className="mb-2 text-sm text-muted">공지 내용</p>
+                    <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-[14px] bg-canvas p-4 text-sm leading-6 text-body">
                       {selectedRequest.content}
                     </p>
                   </div>
 
-                  <div className="space-y-2 border-t border-black/10 pt-4">
+                  <div className="flex gap-2 pt-2">
                     <button
                       onClick={() => handleDelete(selectedRequest.id)}
-                      className="w-full rounded-full bg-dream-pink py-2 font-bold text-black transition hover:bg-black hover:text-dream-pink"
+                      className="h-12 flex-1 rounded-[14px] bg-canvas text-base font-semibold text-danger transition hover:bg-line"
                     >
                       삭제
                     </button>
                     <button
                       onClick={() => setSelectedRequest(null)}
-                      className="w-full rounded-full bg-black py-2 font-bold text-paper transition hover:bg-black/80"
+                      className="h-12 flex-1 rounded-[14px] bg-primary text-base font-semibold text-white transition hover:bg-primary-hover"
                     >
                       닫기
                     </button>
@@ -319,7 +319,7 @@ function AdminDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="rounded-[2rem] bg-white/5 p-8 text-center text-paper/60">요청을 선택하세요</div>
+              <div className="rounded-2xl bg-surface p-10 text-center text-body">요청을 선택해주세요</div>
             )}
           </div>
         </div>
@@ -330,7 +330,7 @@ function AdminDashboard() {
 
 export default function AdminPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-ground" />}>
+    <Suspense fallback={<div className="min-h-screen bg-canvas" />}>
       <AdminDashboard />
     </Suspense>
   );
