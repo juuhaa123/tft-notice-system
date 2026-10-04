@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 type Status = 'pending' | 'approved' | 'completed';
