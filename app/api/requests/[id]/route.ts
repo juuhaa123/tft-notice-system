@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getDb, saveDb } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -7,9 +7,7 @@ export async function GET(
 ) {
   try {
     const db = getDb();
-
-    const request_stmt = db.prepare('SELECT * FROM requests WHERE id = ?');
-    const request_data = request_stmt.get(params.id) as any;
+    const request_data = db.requests.find(r => r.id === params.id);
 
     if (!request_data) {
       return NextResponse.json(
@@ -18,8 +16,7 @@ export async function GET(
       );
     }
 
-    const files_stmt = db.prepare('SELECT * FROM files WHERE request_id = ?');
-    const files = files_stmt.all(params.id) as any[];
+    const files = db.files.filter(f => f.request_id === params.id);
 
     return NextResponse.json({
       data: { ...request_data, files }
@@ -60,14 +57,18 @@ export async function PATCH(
 
     const db = getDb();
     const now = new Date().toISOString();
+    
+    const requestIndex = db.requests.findIndex(r => r.id === params.id);
+    if (requestIndex === -1) {
+      return NextResponse.json(
+        { error: '요청을 찾을 수 없습니다' },
+        { status: 404 }
+      );
+    }
 
-    const stmt = db.prepare(`
-      UPDATE requests
-      SET status = ?, updated_at = ?
-      WHERE id = ?
-    `);
-
-    stmt.run(status, now, params.id);
+    db.requests[requestIndex].status = status as 'pending' | 'approved' | 'completed';
+    db.requests[requestIndex].updated_at = now;
+    saveDb(db);
 
     return NextResponse.json({
       message: '요청이 업데이트되었습니다'
@@ -97,9 +98,9 @@ export async function DELETE(
     }
 
     const db = getDb();
-
-    const stmt = db.prepare('DELETE FROM requests WHERE id = ?');
-    stmt.run(params.id);
+    db.requests = db.requests.filter(r => r.id !== params.id);
+    db.files = db.files.filter(f => f.request_id !== params.id);
+    saveDb(db);
 
     return NextResponse.json({
       message: '요청이 삭제되었습니다'
