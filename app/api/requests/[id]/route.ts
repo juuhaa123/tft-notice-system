@@ -3,11 +3,12 @@ import { getDb, saveDb } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const db = getDb();
-    const request_data = db.requests.find(r => r.id === params.id);
+    const request_data = db.requests.find(r => r.id === id);
 
     if (!request_data) {
       return NextResponse.json(
@@ -16,7 +17,7 @@ export async function GET(
       );
     }
 
-    const files = db.files.filter(f => f.request_id === params.id);
+    const files = db.files.filter(f => f.request_id === id);
 
     return NextResponse.json({
       data: { ...request_data, files }
@@ -32,9 +33,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = new URL(request.url).searchParams.get('token');
     const adminToken = process.env.ADMIN_TOKEN || 'admin-token';
 
@@ -58,7 +60,7 @@ export async function PATCH(
     const db = getDb();
     const now = new Date().toISOString();
     
-    const requestIndex = db.requests.findIndex(r => r.id === params.id);
+    const requestIndex = db.requests.findIndex(r => r.id === id);
     if (requestIndex === -1) {
       return NextResponse.json(
         { error: '요청을 찾을 수 없습니다' },
@@ -84,9 +86,10 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const token = new URL(request.url).searchParams.get('token');
     const adminToken = process.env.ADMIN_TOKEN || 'admin-token';
 
@@ -98,8 +101,8 @@ export async function DELETE(
     }
 
     const db = getDb();
-    db.requests = db.requests.filter(r => r.id !== params.id);
-    db.files = db.files.filter(f => f.request_id !== params.id);
+    db.requests = db.requests.filter(r => r.id !== id);
+    db.files = db.files.filter(f => f.request_id !== id);
     saveDb(db);
 
     return NextResponse.json({
