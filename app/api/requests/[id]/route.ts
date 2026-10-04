@@ -31,6 +31,69 @@ export async function GET(
   }
 }
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const body = await request.json();
+
+    const team = String(body.team || '').trim();
+    const leader_name = String(body.leader_name || '').trim();
+    const titleBody = String(body.title || '')
+      .trim()
+      .replace(/^(\[2026 창문축제 TFT\]|\[창문축제\])\s*/, '')
+      .trim();
+    const content = String(body.content || '').trim();
+    const scheduled_date = String(body.scheduled_date || '').trim();
+    const title_en = String(body.title_en || '').trim();
+    const content_en = String(body.content_en || '').trim();
+
+    if (!team || !leader_name || !titleBody || !content || !scheduled_date) {
+      return NextResponse.json(
+        { error: '필수 필드를 입력해주세요' },
+        { status: 400 }
+      );
+    }
+
+    const db = await getDb();
+    const index = db.requests.findIndex(r => r.id === id);
+    if (index === -1) {
+      return NextResponse.json(
+        { error: '요청을 찾을 수 없습니다' },
+        { status: 404 }
+      );
+    }
+
+    const current = db.requests[index];
+    const updated = {
+      ...current,
+      team,
+      leader_name,
+      title: `[2026 창문축제 TFT] ${titleBody}`,
+      content,
+      scheduled_date,
+      updated_at: new Date().toISOString(),
+    };
+    delete updated.title_en;
+    delete updated.content_en;
+    if (title_en) updated.title_en = title_en;
+    if (content_en) updated.content_en = content_en;
+
+    db.requests[index] = updated;
+    await saveDb(db);
+
+    return NextResponse.json({ message: '요청이 수정되었습니다' });
+  } catch (error) {
+    console.error('Error editing request:', error);
+    return NextResponse.json(
+      { error: '요청 수정 중 오류가 발생했습니다' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

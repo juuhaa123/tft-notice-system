@@ -51,15 +51,24 @@ function formatDate(value: string) {
   return d.toLocaleString('ko-KR', { month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 
-function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }) {
+function RequestForm({
+  onClose,
+  onSaved,
+  initial,
+}: {
+  onClose: () => void;
+  onSaved: () => void;
+  initial?: NoticeRequest;
+}) {
+  const isEdit = !!initial;
   const [formData, setFormData] = useState({
-    team: '',
-    leader_name: '',
-    title: '',
-    content: '',
-    title_en: '',
-    content_en: '',
-    scheduled_date: '',
+    team: initial?.team ?? '',
+    leader_name: initial?.leader_name ?? '',
+    title: initial ? initial.title.replace(/^\[2026 창문축제 TFT\]\s*/, '') : '',
+    content: initial?.content ?? '',
+    title_en: initial?.title_en ?? '',
+    content_en: initial?.content_en ?? '',
+    scheduled_date: initial ? initial.scheduled_date.slice(0, 10) : '',
   });
   const [files, setFiles] = useState<File[]>([]);
   const [loading, setLoading] = useState(false);
@@ -101,6 +110,24 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
 
     setLoading(true);
     try {
+      if (isEdit) {
+        const response = await fetch(`/api/requests/${initial!.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...formData,
+            title: `${TITLE_PREFIX} ${formData.title.trim()}`,
+          }),
+        });
+        if (response.ok) {
+          onSaved();
+        } else {
+          const error = await response.json().catch(() => null);
+          setMessage(error?.error || '수정 중 오류가 발생했습니다');
+        }
+        return;
+      }
+
       const form = new FormData();
       form.append('team', formData.team);
       form.append('leader_name', formData.leader_name);
@@ -114,7 +141,7 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
       const response = await fetch('/api/requests', { method: 'POST', body: form });
 
       if (response.ok) {
-        onCreated();
+        onSaved();
       } else {
         const error = await response.json().catch(() => null);
         setMessage(error?.error || '요청 처리 중 오류가 발생했습니다');
@@ -135,10 +162,10 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
         className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl bg-canvas p-6 sm:rounded-3xl"
         onClick={e => e.stopPropagation()}
         role="dialog"
-        aria-label="공지 의뢰 추가"
+        aria-label={isEdit ? '공지 의뢰 수정' : '공지 의뢰 추가'}
       >
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-foreground">공지 의뢰 추가</h2>
+          <h2 className="text-2xl font-bold text-foreground">{isEdit ? '공지 의뢰 수정' : '공지 의뢰 추가'}</h2>
           <button type="button" onClick={onClose} className="text-sm font-semibold text-muted hover:text-body">
             닫기
           </button>
@@ -235,6 +262,11 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
             />
           </div>
 
+          {isEdit ? (
+            <p className="rounded-[14px] bg-surface px-4 py-3 text-sm text-body">
+              첨부파일은 수정할 수 없어요. 파일을 바꾸려면 관리자에게 알려주세요.
+            </p>
+          ) : (
           <div>
             <Label optional>파일 첨부</Label>
             <div
@@ -271,6 +303,7 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
               </div>
             )}
           </div>
+          )}
 
           {message && (
             <div role="status" className="rounded-[14px] bg-surface px-4 py-3.5 text-center text-sm font-semibold text-danger">
@@ -283,7 +316,7 @@ function RequestForm({ onClose, onCreated }: { onClose: () => void; onCreated: (
             disabled={loading}
             className="h-14 w-full rounded-2xl bg-primary px-5 text-[17px] font-semibold text-white transition hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {loading ? '등록 중...' : '의뢰하기'}
+            {loading ? (isEdit ? '저장 중...' : '등록 중...') : isEdit ? '수정하기' : '의뢰하기'}
           </button>
         </form>
       </div>
@@ -296,6 +329,8 @@ export default function Home() {
   const [filesById, setFilesById] = useState<Record<string, FileRecord[]>>({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<NoticeRequest | null>(null);
+  const [tab, setTab] = useState<'all' | 'pending' | 'completed'>('all');
   const [toast, setToast] = useState('');
   const [token, setToken] = useState('');
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -404,6 +439,16 @@ export default function Home() {
 
   const isAdmin = !!token;
   const pendingCount = requests.filter(r => r.status !== 'completed').length;
+  const completedCount = requests.length - pendingCount;
+  const visibleRequests =
+    tab === 'all'
+      ? requests
+      : requests.filter(r => (tab === 'completed' ? r.status === 'completed' : r.status !== 'completed'));
+  const tabs: { key: 'all' | 'pending' | 'completed'; label: string; count: number }[] = [
+    { key: 'all', label: '전체', count: requests.length },
+    { key: 'pending', label: '대기중', count: pendingCount },
+    { key: 'completed', label: '완료', count: completedCount },
+  ];
 
   return (
     <div className="min-h-screen bg-canvas">
@@ -429,6 +474,21 @@ export default function Home() {
               <button onClick={handleAdminLogout} className="underline">나가기</button>
             </div>
           )}
+          <div className="mt-5 flex gap-2" role="tablist">
+            {tabs.map(t => (
+              <button
+                key={t.key}
+                role="tab"
+                aria-selected={tab === t.key}
+                onClick={() => setTab(t.key)}
+                className={`h-10 rounded-[10px] px-4 text-[15px] font-semibold transition ${
+                  tab === t.key ? 'bg-foreground text-white' : 'bg-surface text-body hover:bg-line'
+                }`}
+              >
+                {t.label} <span className={tab === t.key ? 'text-white/70' : 'text-muted'}>{t.count}</span>
+              </button>
+            ))}
+          </div>
         </header>
 
         {loading ? (
@@ -439,9 +499,13 @@ export default function Home() {
             <br />
             오른쪽 아래 + 버튼으로 첫 의뢰를 추가해 보세요.
           </div>
+        ) : visibleRequests.length === 0 ? (
+          <div className="rounded-2xl bg-surface p-12 text-center text-body">
+            {tab === 'pending' ? '대기중인 의뢰가 없어요.' : '완료된 의뢰가 없어요.'}
+          </div>
         ) : (
           <ul className="space-y-3">
-            {requests.map(request => {
+            {visibleRequests.map(request => {
               const files = filesById[request.id] || [];
               const isOpen = expanded === request.id;
               const done = request.status === 'completed';
@@ -502,6 +566,12 @@ export default function Home() {
                   <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
                     <span className="text-xs text-muted">{formatDate(request.created_at)} 등록</span>
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setEditing(request)}
+                        className="h-10 rounded-[10px] px-3 text-sm font-semibold text-muted hover:text-primary"
+                      >
+                        수정
+                      </button>
                       {isAdmin && (
                         <button
                           onClick={() => handleDelete(request.id)}
@@ -552,9 +622,21 @@ export default function Home() {
       {showForm && (
         <RequestForm
           onClose={() => setShowForm(false)}
-          onCreated={() => {
+          onSaved={() => {
             setShowForm(false);
             showToast('공지 의뢰가 등록되었어요!');
+            loadRequests();
+          }}
+        />
+      )}
+
+      {editing && (
+        <RequestForm
+          initial={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => {
+            setEditing(null);
+            showToast('공지 의뢰를 수정했어요!');
             loadRequests();
           }}
         />
