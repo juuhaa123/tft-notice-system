@@ -12,6 +12,7 @@ type NoticeRequest = {
   content: string;
   title_en?: string;
   content_en?: string;
+  pinned?: boolean;
   scheduled_date: string;
   status: Status;
   created_at: string;
@@ -431,6 +432,20 @@ export default function Home() {
     }
   };
 
+  const handlePin = async (id: string, pinned: boolean) => {
+    const res = await fetch(`/api/requests/${id}?token=${encodeURIComponent(token)}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinned }),
+    });
+    if (res.ok) {
+      showToast(pinned ? '맨 위에 고정했어요' : '고정을 해제했어요');
+      loadRequests();
+    } else {
+      alert('고정을 바꾸지 못했어요. 관리자 모드를 다시 확인해주세요.');
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm('이 의뢰를 삭제할까요?')) return;
     const res = await fetch(`/api/requests/${id}?token=${encodeURIComponent(token)}`, { method: 'DELETE' });
@@ -512,6 +527,9 @@ export default function Home() {
               return (
                 <li key={request.id} className={`rounded-2xl border p-5 ${done ? 'border-line bg-surface' : 'border-line bg-canvas'}`}>
                   <div className="mb-2 flex items-center gap-2 text-sm text-muted">
+                    {request.pinned && (
+                      <span className="rounded-md bg-weak px-2 py-0.5 text-xs font-semibold text-weak-fg">고정</span>
+                    )}
                     <span className="font-semibold text-body">{request.team}</span>
                     <span>·</span>
                     <span>{request.leader_name}</span>
@@ -572,6 +590,14 @@ export default function Home() {
                       >
                         수정
                       </button>
+                      {isAdmin && (
+                        <button
+                          onClick={() => handlePin(request.id, !request.pinned)}
+                          className="h-10 rounded-[10px] px-3 text-sm font-semibold text-muted hover:text-primary"
+                        >
+                          {request.pinned ? '고정 해제' : '고정'}
+                        </button>
+                      )}
                       {isAdmin && (
                         <button
                           onClick={() => handleDelete(request.id)}

@@ -111,11 +111,23 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { status } = body;
+    const { status, pinned } = body;
 
-    if (!['pending', 'approved', 'completed'].includes(status)) {
+    if (status === undefined && pinned === undefined) {
+      return NextResponse.json(
+        { error: '변경할 내용이 없습니다' },
+        { status: 400 }
+      );
+    }
+    if (status !== undefined && !['pending', 'approved', 'completed'].includes(status)) {
       return NextResponse.json(
         { error: '잘못된 상태입니다' },
+        { status: 400 }
+      );
+    }
+    if (pinned !== undefined && typeof pinned !== 'boolean') {
+      return NextResponse.json(
+        { error: '잘못된 고정 값입니다' },
         { status: 400 }
       );
     }
@@ -131,7 +143,13 @@ export async function PATCH(
       );
     }
 
-    db.requests[requestIndex].status = status as 'pending' | 'approved' | 'completed';
+    if (status !== undefined) {
+      db.requests[requestIndex].status = status as 'pending' | 'approved' | 'completed';
+    }
+    if (pinned !== undefined) {
+      if (pinned) db.requests[requestIndex].pinned = true;
+      else delete db.requests[requestIndex].pinned;
+    }
     db.requests[requestIndex].updated_at = now;
     await saveDb(db);
 

@@ -95,7 +95,11 @@ export async function GET(request: NextRequest) {
       rows = rows.filter(r => r.status === status);
     }
 
-    rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    rows.sort(
+      (a, b) =>
+        Number(!!b.pinned) - Number(!!a.pinned) ||
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
     return NextResponse.json({ data: rows, isAdmin });
   } catch (error) {
