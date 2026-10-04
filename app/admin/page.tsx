@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import DreamersLogo from '@/components/DreamersLogo';
 
 type Status = 'pending' | 'approved' | 'completed';
 
@@ -31,13 +31,19 @@ const STATUS_LABELS: Record<Status, string> = {
   completed: '완료됨',
 };
 
-const STATUS_COLORS: Record<Status, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  approved: 'bg-blue-100 text-blue-800',
-  completed: 'bg-green-100 text-green-800',
+const STATUS_BADGE: Record<Status, string> = {
+  pending: 'bg-dream-yellow text-black',
+  approved: 'bg-dream-purple text-black',
+  completed: 'bg-dream-green text-black',
 };
 
-export default function AdminDashboard() {
+const STATUS_BORDER: Record<Status, string> = {
+  pending: 'border-l-dream-yellow',
+  approved: 'border-l-dream-purple',
+  completed: 'border-l-dream-green',
+};
+
+function AdminDashboard() {
   const searchParams = useSearchParams();
   const [token, setToken] = useState('');
   const [showTokenModal, setShowTokenModal] = useState(true);
@@ -67,12 +73,15 @@ export default function AdminDashboard() {
           setRequests(data.data);
         } else {
           alert('관리자 권한이 없습니다');
+          setShowTokenModal(true);
         }
       } else {
         alert('토큰이 잘못되었습니다');
+        setShowTokenModal(true);
       }
     } catch (error) {
       alert('연결 오류가 발생했습니다');
+      setShowTokenModal(true);
     } finally {
       setLoading(false);
     }
@@ -96,7 +105,7 @@ export default function AdminDashboard() {
 
       if (response.ok) {
         setRequests(prev =>
-          prev.map(req => req.id === requestId ? { ...req, status: newStatus } : req)
+          prev.map(req => (req.id === requestId ? { ...req, status: newStatus } : req))
         );
         if (selectedRequest?.id === requestId) {
           setSelectedRequest({ ...selectedRequest, status: newStatus });
@@ -134,133 +143,128 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredRequests = selectedStatus === 'all'
-    ? requests
-    : requests.filter(req => req.status === selectedStatus);
+  const filteredRequests =
+    selectedStatus === 'all' ? requests : requests.filter(req => req.status === selectedStatus);
 
   if (showTokenModal && !isAuthorized) {
     return (
-      <div className="min-h-screen bg-mint flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full">
-          <h1 className="text-2xl font-bold text-text-primary mb-6">관리자 로그인</h1>
-          <form onSubmit={handleTokenSubmit} className="space-y-4">
-            <div>
-              <label className="block text-text-primary font-bold mb-2">
-                관리자 토큰
-              </label>
-              <input
-                type="password"
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                placeholder="토큰을 입력하세요"
-                className="w-full px-4 py-3 border-2 border-bg-secondary rounded-md focus:outline-none focus:border-mint"
-              />
-            </div>
-            <button
-              type="submit"
-              className="w-full bg-mint text-white font-bold py-3 rounded-md hover:bg-mint-dark transition"
-            >
-              로그인
-            </button>
-          </form>
+      <div className="flex min-h-screen items-center justify-center bg-ground p-5">
+        <div className="w-full max-w-md">
+          <DreamersLogo className="mx-auto mb-6 w-64" />
+          <div className="rounded-[2rem] bg-paper p-8 text-black">
+            <h1 className="mb-6 font-display text-2xl">관리자 로그인</h1>
+            <form onSubmit={handleTokenSubmit} className="space-y-4">
+              <div>
+                <label className="mb-2 block font-bold">관리자 토큰</label>
+                <input
+                  type="password"
+                  value={token}
+                  onChange={e => setToken(e.target.value)}
+                  placeholder="토큰을 입력하세요"
+                  className="w-full rounded-2xl border-2 border-black/10 bg-white px-4 py-3 focus:border-dream-pink focus:outline-none"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full rounded-full bg-black py-3 font-bold text-dream-yellow transition hover:bg-dream-pink hover:text-black"
+              >
+                로그인
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     );
   }
 
   if (!isAuthorized) {
-    return null;
+    return <div className="min-h-screen bg-ground" />;
   }
 
   return (
-    <div className="min-h-screen bg-bg-secondary">
-      {/* Header */}
-      <header className="bg-mint text-white py-6">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl font-bold">📋 공지 요청 관리</h1>
-          <p className="text-mint-light mt-2">총 {requests.length}개의 요청</p>
+    <div className="min-h-screen bg-ground">
+      <header className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-5 pb-4 pt-8">
+        <div>
+          <DreamersLogo className="w-52" />
+          <h1 className="mt-2 font-display text-3xl text-paper">
+            공지 요청 관리<span className="text-dream-yellow">.</span>
+          </h1>
         </div>
+        <p className="rounded-full bg-paper px-4 py-2 font-bold text-black">총 {requests.length}개의 요청</p>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Request List */}
+      <main className="mx-auto max-w-7xl px-5 pb-12 pt-4">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
-            {/* Status Tabs */}
-            <div className="flex gap-2 mb-6 overflow-x-auto">
+            <div className="mb-5 flex gap-2 overflow-x-auto">
               {(['all', 'pending', 'approved', 'completed'] as const).map(status => (
                 <button
                   key={status}
                   onClick={() => setSelectedStatus(status)}
-                  className={`px-4 py-2 rounded-md font-bold whitespace-nowrap transition ${
+                  className={`whitespace-nowrap rounded-full px-5 py-2 font-bold transition ${
                     selectedStatus === status
-                      ? 'bg-mint text-white'
-                      : 'bg-white text-text-primary hover:bg-bg-secondary'
+                      ? 'bg-dream-pink text-black'
+                      : 'bg-white/10 text-paper hover:bg-white/20'
                   }`}
                 >
-                  {status === 'all' ? '전체' : STATUS_LABELS[status as Status]}
+                  {status === 'all' ? '전체' : STATUS_LABELS[status]}
                 </button>
               ))}
             </div>
 
-            {/* Request Cards */}
+            {loading && <p className="mb-3 text-paper/60">불러오는 중...</p>}
+
             <div className="space-y-3">
               {filteredRequests.map(request => (
                 <div
                   key={request.id}
-                  className="bg-white rounded-lg p-4 border-l-4 border-mint shadow-sm hover:shadow-md transition cursor-pointer"
+                  className={`cursor-pointer rounded-2xl border-l-8 bg-white/5 p-4 transition hover:bg-white/10 ${STATUS_BORDER[request.status]} ${
+                    selectedRequest?.id === request.id ? 'bg-white/10 ring-2 ring-dream-yellow' : ''
+                  }`}
                   onClick={() => handleViewDetails(request.id)}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_COLORS[request.status]}`}>
-                          {STATUS_LABELS[request.status]}
-                        </span>
-                        <span className="text-sm text-text-secondary">{request.team}</span>
-                      </div>
-                      <h3 className="text-lg font-bold text-text-primary">{request.title}</h3>
-                      <p className="text-sm text-text-secondary mt-1">팀장: {request.leader_name}</p>
-                      <p className="text-xs text-text-secondary mt-1">
-                        {new Date(request.created_at).toLocaleString('ko-KR')}
-                      </p>
-                    </div>
+                  <div className="mb-2 flex items-center gap-3">
+                    <span className={`rounded-full px-3 py-1 text-xs font-bold ${STATUS_BADGE[request.status]}`}>
+                      {STATUS_LABELS[request.status]}
+                    </span>
+                    <span className="text-sm text-paper/70">{request.team}</span>
                   </div>
+                  <h3 className="text-lg font-bold text-paper">{request.title}</h3>
+                  <p className="mt-1 text-sm text-paper/70">팀장: {request.leader_name}</p>
+                  <p className="mt-1 text-xs text-paper/50">
+                    {new Date(request.created_at).toLocaleString('ko-KR')}
+                  </p>
                 </div>
               ))}
 
               {filteredRequests.length === 0 && (
-                <div className="bg-white rounded-lg p-8 text-center text-text-secondary">
-                  요청이 없습니다
-                </div>
+                <div className="rounded-2xl bg-white/5 p-8 text-center text-paper/60">요청이 없습니다</div>
               )}
             </div>
           </div>
 
-          {/* Details Panel */}
           <div className="lg:col-span-1">
             {selectedRequest ? (
-              <div className="bg-white rounded-lg p-6 shadow-lg sticky top-4">
-                <h2 className="text-xl font-bold text-text-primary mb-4">상세 정보</h2>
+              <div className="sticky top-4 rounded-[2rem] bg-paper p-6 text-black">
+                <h2 className="mb-4 font-display text-xl">상세 정보</h2>
 
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-text-secondary font-bold">팀</p>
-                    <p className="text-text-primary">{selectedRequest.team}</p>
+                    <p className="text-sm font-bold text-black/50">팀</p>
+                    <p>{selectedRequest.team}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-text-secondary font-bold">팀장</p>
-                    <p className="text-text-primary">{selectedRequest.leader_name}</p>
+                    <p className="text-sm font-bold text-black/50">팀장</p>
+                    <p>{selectedRequest.leader_name}</p>
                   </div>
 
                   <div>
-                    <p className="text-sm text-text-secondary font-bold">상태</p>
+                    <p className="text-sm font-bold text-black/50">상태</p>
                     <select
                       value={selectedRequest.status}
-                      onChange={(e) => handleStatusChange(selectedRequest.id, e.target.value as Status)}
-                      className="w-full mt-1 px-3 py-2 border-2 border-bg-secondary rounded-md focus:outline-none focus:border-mint"
+                      onChange={e => handleStatusChange(selectedRequest.id, e.target.value as Status)}
+                      className="mt-1 w-full rounded-2xl border-2 border-black/10 bg-white px-3 py-2 focus:border-dream-pink focus:outline-none"
                     >
                       <option value="pending">대기중</option>
                       <option value="approved">승인됨</option>
@@ -269,24 +273,22 @@ export default function AdminDashboard() {
                   </div>
 
                   <div>
-                    <p className="text-sm text-text-secondary font-bold">게시 희망 일자</p>
-                    <p className="text-text-primary text-sm">
-                      {new Date(selectedRequest.scheduled_date).toLocaleString('ko-KR')}
-                    </p>
+                    <p className="text-sm font-bold text-black/50">게시 희망 일자</p>
+                    <p className="text-sm">{new Date(selectedRequest.scheduled_date).toLocaleString('ko-KR')}</p>
                   </div>
 
                   {selectedRequest.files && selectedRequest.files.length > 0 && (
                     <div>
-                      <p className="text-sm text-text-secondary font-bold mb-2">첨부파일</p>
+                      <p className="mb-2 text-sm font-bold text-black/50">첨부파일</p>
                       <div className="space-y-2">
                         {selectedRequest.files.map(file => (
                           <a
                             key={file.id}
                             href={file.file_path}
                             download
-                            className="block text-sm text-mint hover:text-mint-dark break-all"
+                            className="block break-all rounded-2xl bg-white px-3 py-2 text-sm font-bold underline decoration-dream-pink decoration-2 underline-offset-4 hover:bg-dream-yellow"
                           >
-                            📄 {file.file_name}
+                            {file.file_name}
                           </a>
                         ))}
                       </div>
@@ -294,22 +296,22 @@ export default function AdminDashboard() {
                   )}
 
                   <div>
-                    <p className="text-sm text-text-secondary font-bold mb-2">공지 내용</p>
-                    <p className="text-sm text-text-primary bg-bg-secondary p-3 rounded-md whitespace-pre-wrap max-h-48 overflow-y-auto">
+                    <p className="mb-2 text-sm font-bold text-black/50">공지 내용</p>
+                    <p className="max-h-48 overflow-y-auto whitespace-pre-wrap rounded-2xl bg-white p-3 text-sm">
                       {selectedRequest.content}
                     </p>
                   </div>
 
-                  <div className="space-y-2 pt-4 border-t border-bg-secondary">
+                  <div className="space-y-2 border-t border-black/10 pt-4">
                     <button
                       onClick={() => handleDelete(selectedRequest.id)}
-                      className="w-full bg-red-500 text-white font-bold py-2 rounded-md hover:bg-red-600 transition"
+                      className="w-full rounded-full bg-dream-pink py-2 font-bold text-black transition hover:bg-black hover:text-dream-pink"
                     >
                       삭제
                     </button>
                     <button
                       onClick={() => setSelectedRequest(null)}
-                      className="w-full bg-bg-secondary text-text-primary font-bold py-2 rounded-md hover:bg-bg-tertiary transition"
+                      className="w-full rounded-full bg-black py-2 font-bold text-paper transition hover:bg-black/80"
                     >
                       닫기
                     </button>
@@ -317,13 +319,19 @@ export default function AdminDashboard() {
                 </div>
               </div>
             ) : (
-              <div className="bg-white rounded-lg p-6 text-center text-text-secondary">
-                요청을 선택하세요
-              </div>
+              <div className="rounded-[2rem] bg-white/5 p-8 text-center text-paper/60">요청을 선택하세요</div>
             )}
           </div>
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-ground" />}>
+      <AdminDashboard />
+    </Suspense>
   );
 }
