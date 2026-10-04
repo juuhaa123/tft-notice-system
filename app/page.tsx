@@ -56,12 +56,15 @@ function RequestForm({
   onClose,
   onSaved,
   initial,
+  existingFiles = [],
 }: {
   onClose: () => void;
   onSaved: () => void;
   initial?: NoticeRequest;
+  existingFiles?: FileRecord[];
 }) {
   const isEdit = !!initial;
+  const [removedIds, setRemovedIds] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     team: initial?.team ?? '',
     leader_name: initial?.leader_name ?? '',
@@ -109,17 +112,23 @@ function RequestForm({
       return;
     }
 
+    if (isEdit && !confirm('이렇게 수정하시겠습니까?')) return;
+
     setLoading(true);
     try {
       if (isEdit) {
-        const response = await fetch(`/api/requests/${initial!.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...formData,
-            title: `${TITLE_PREFIX} ${formData.title.trim()}`,
-          }),
-        });
+        const editForm = new FormData();
+        editForm.append('team', formData.team);
+        editForm.append('leader_name', formData.leader_name);
+        editForm.append('title', `${TITLE_PREFIX} ${formData.title.trim()}`);
+        editForm.append('content', formData.content);
+        editForm.append('title_en', formData.title_en);
+        editForm.append('content_en', formData.content_en);
+        editForm.append('scheduled_date', formData.scheduled_date);
+        editForm.append('remove_file_ids', JSON.stringify(removedIds));
+        files.forEach(file => editForm.append('files', file));
+
+        const response = await fetch(`/api/requests/${initial!.id}`, { method: 'PUT', body: editForm });
         if (response.ok) {
           onSaved();
         } else {
@@ -263,13 +272,30 @@ function RequestForm({
             />
           </div>
 
-          {isEdit ? (
-            <p className="rounded-[14px] bg-surface px-4 py-3 text-sm text-body">
-              첨부파일은 수정할 수 없어요. 파일을 바꾸려면 관리자에게 알려주세요.
-            </p>
-          ) : (
           <div>
             <Label optional>파일 첨부</Label>
+
+            {isEdit && existingFiles.filter(f => !removedIds.includes(f.id)).length > 0 && (
+              <div className="mb-3 space-y-2">
+                <p className="text-xs font-semibold text-muted">올려둔 파일</p>
+                {existingFiles
+                  .filter(f => !removedIds.includes(f.id))
+                  .map(file => (
+                    <div key={file.id} className="flex items-center justify-between rounded-[14px] bg-weak px-4 py-3">
+                      <span className="truncate text-sm font-semibold text-weak-fg">{file.file_name}</span>
+                      <button
+                        type="button"
+                        onClick={() => setRemovedIds(prev => [...prev, file.id])}
+                        className="ml-3 text-sm font-semibold text-muted hover:text-danger"
+                        aria-label="올려둔 파일 삭제"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  ))}
+              </div>
+            )}
+
             <div
               className="cursor-pointer rounded-[14px] bg-surface p-5 text-center transition hover:bg-line"
               onClick={() => fileInputRef.current?.click()}
@@ -304,7 +330,6 @@ function RequestForm({
               </div>
             )}
           </div>
-          )}
 
           {message && (
             <div role="status" className="rounded-[14px] bg-surface px-4 py-3.5 text-center text-sm font-semibold text-danger">
@@ -659,6 +684,7 @@ export default function Home() {
       {editing && (
         <RequestForm
           initial={editing}
+          existingFiles={filesById[editing.id] || []}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);

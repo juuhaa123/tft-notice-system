@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb, saveDb } from '@/lib/db';
+import { getDb, saveDb, saveUpload, deleteUpload } from '@/lib/db';
+import { v4 as uuidv4 } from 'uuid';
 
 export async function GET(
   request: NextRequest,
@@ -37,18 +38,25 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
-    const body = await request.json();
+    const body = await request.formData();
+    const field = (name: string) => String(body.get(name) || '').trim();
 
-    const team = String(body.team || '').trim();
-    const leader_name = String(body.leader_name || '').trim();
-    const titleBody = String(body.title || '')
-      .trim()
+    const team = field('team');
+    const leader_name = field('leader_name');
+    const titleBody = field('title')
       .replace(/^(\[2026 창문축제 TFT\]|\[창문축제\])\s*/, '')
       .trim();
-    const content = String(body.content || '').trim();
-    const scheduled_date = String(body.scheduled_date || '').trim();
-    const title_en = String(body.title_en || '').trim();
-    const content_en = String(body.content_en || '').trim();
+    const content = field('content');
+    const scheduled_date = field('scheduled_date');
+    const title_en = field('title_en');
+    const content_en = field('content_en');
+
+    let removeIds: string[] = [];
+    try {
+      const parsed = JSON.parse(field('remove_file_ids') || '[]');
+      if (Array.isArray(parsed)) removeIds = parsed.map(String);
+    } catch {}
+    const newFiles = body.getAll('files') as File[];
 
     if (!team || !leader_name || !titleBody || !content || !scheduled_date) {
       return NextResponse.json(
@@ -82,7 +90,28 @@ export async function PUT(
     if (content_en) updated.content_en = content_en;
 
     db.requests[index] = updated;
+
+    const removed = db.files.filter(f => f.request_id === id && removeIds.includes(f.id));
+    db.files = db.files.filter(f => !removed.includes(f));
+
+    const now = new Date().toISOString();
+    for (const file of newFiles) {
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const fileId = uuidv4();
+      const storedPath = await saveUpload(fileId, file.name, buffer, file.type);
+      db.files.push({
+        id: fileId,
+        request_id: id,
+        file_name: file.name,
+        file_path: storedPath,
+        file_type: file.type,
+        file_size: buffer.length,
+        created_at: now,
+      });
+    }
+
     await saveDb(db);
+    await Promise.all(removed.map(f => deleteUpload(f.file_path)));
 
     return NextResponse.json({ message: '요청이 수정되었습니다' });
   } catch (error) {
@@ -182,9 +211,11 @@ export async function DELETE(
     }
 
     const db = await getDb();
+    const orphaned = db.files.filter(f => f.request_id === id);
     db.requests = db.requests.filter(r => r.id !== id);
     db.files = db.files.filter(f => f.request_id !== id);
     await saveDb(db);
+    await Promise.all(orphaned.map(f => deleteUpload(f.file_path)));
 
     return NextResponse.json({
       message: '요청이 삭제되었습니다'

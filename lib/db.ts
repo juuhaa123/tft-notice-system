@@ -1,5 +1,5 @@
-import { get, put } from '@vercel/blob';
-import { readFile, writeFile, mkdir } from 'fs/promises';
+import { get, put, del } from '@vercel/blob';
+import { readFile, writeFile, mkdir, unlink } from 'fs/promises';
 import path from 'path';
 
 const DB_PATHNAME = 'tft/data.json';
@@ -78,6 +78,14 @@ export async function saveUpload(id: string, fileName: string, buffer: Buffer, c
     await writeFile(localPath(pathname), buffer);
   }
   return pathname;
+}
+
+export async function deleteUpload(pathname: string) {
+  if (!pathname.startsWith(UPLOAD_PREFIX) || pathname.includes('..')) return;
+  try {
+    if (useBlob()) await del(pathname);
+    else await unlink(localPath(pathname));
+  } catch {}
 }
 
 export async function readUpload(pathname: string): Promise<{ body: ReadableStream<Uint8Array> | Buffer; contentType: string } | null> {
