@@ -16,6 +16,7 @@ type NoticeRequest = {
   contact_name?: string;
   contact_email?: string;
   pinned?: boolean;
+  files?: FileRecord[];
   scheduled_date: string;
   status: Status;
   created_at: string;
@@ -414,7 +415,6 @@ function RequestForm({
 
 export default function Home() {
   const [requests, setRequests] = useState<NoticeRequest[]>([]);
-  const [filesById, setFilesById] = useState<Record<string, FileRecord[]>>({});
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<NoticeRequest | null>(null);
@@ -429,23 +429,13 @@ export default function Home() {
       const json = await res.json();
       const list: NoticeRequest[] = json.data || [];
       setRequests(list);
-
-      const details = await Promise.all(
-        list.map(r =>
-          fetch(`/api/requests/${r.id}`, { cache: 'no-store' })
-            .then(x => x.json())
-            .then(x => [r.id, (x.data?.files || []) as FileRecord[]] as const)
-            .catch(() => [r.id, [] as FileRecord[]] as const)
-        )
-      );
-      setFilesById(Object.fromEntries(details));
     } finally {
       setLoading(false);
     }
   }, []);
 
   const verifyToken = useCallback(async (candidate: string) => {
-    const res = await fetch(`/api/requests?token=${encodeURIComponent(candidate)}`, { cache: 'no-store' });
+    const res = await fetch(`/api/admin?token=${encodeURIComponent(candidate)}`, { cache: 'no-store' });
     const json = await res.json();
     return !!json.isAdmin;
   }, []);
@@ -608,7 +598,7 @@ export default function Home() {
         ) : (
           <ul className="space-y-3">
             {visibleRequests.map(request => {
-              const files = filesById[request.id] || [];
+              const files = request.files || [];
               const isOpen = expanded === request.id;
               const done = request.status === 'completed';
               return (
@@ -753,7 +743,7 @@ export default function Home() {
       {editing && (
         <RequestForm
           initial={editing}
-          existingFiles={filesById[editing.id] || []}
+          existingFiles={editing.files || []}
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);

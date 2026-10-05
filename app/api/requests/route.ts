@@ -119,7 +119,9 @@ export async function GET(request: NextRequest) {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     );
 
-    return NextResponse.json({ data: rows, isAdmin });
+    const data = rows.map(r => ({ ...r, files: db.files.filter(f => f.request_id === r.id) }));
+
+    return NextResponse.json({ data, isAdmin });
   } catch (error) {
     console.error('Error fetching requests:', error);
     return NextResponse.json(
