@@ -337,6 +337,11 @@ function RequestForm({
 
           <div>
             <Label optional>파일 첨부</Label>
+            <p className="mb-2 text-xs leading-5 text-muted">
+              {isEdit
+                ? '한 번에 4MB까지 업로드할 수 있어요. 더 올릴 파일은 저장한 뒤 다시 수정하기에서 추가해 주세요.'
+                : '한 번에 4MB까지 업로드할 수 있어요. 여러 개를 올려야 한다면 등록 후 수정하기에서 추가로 올려주세요.'}
+            </p>
 
             {isEdit && existingFiles.filter(f => !removedIds.includes(f.id)).length > 0 && (
               <div className="mb-3 space-y-2">
