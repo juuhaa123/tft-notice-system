@@ -33,6 +33,7 @@ type FileRecord = {
 
 const TEAMS = ['무대운영팀', '기획운영팀', '본부팀', '지원팀', '데코팀', '디자인팀', '미디어팀'];
 const TITLE_PREFIX = '[2026 창문축제 TFT]';
+const TITLE_PREFIX_EN = '[Changmun Festival]';
 const TOKEN_KEY = 'tft_admin_token';
 
 const fieldClass =
@@ -77,7 +78,7 @@ function RequestForm({
     leader_name: initial?.leader_name ?? '',
     title: initial ? initial.title.replace(/^\[2026 창문축제 TFT\]\s*/, '') : '',
     content: initial?.content ?? '',
-    title_en: initial?.title_en ?? '',
+    title_en: (initial?.title_en ?? '').replace(/^\[Changmun Festival\]\s*/i, ''),
     content_en: initial?.content_en ?? '',
     contact_role: initial?.contact_role ?? '',
     contact_name: initial?.contact_name ?? '',
@@ -146,7 +147,7 @@ function RequestForm({
         editForm.append('leader_name', formData.leader_name);
         editForm.append('title', `${TITLE_PREFIX} ${formData.title.trim()}`);
         editForm.append('content', formData.content);
-        editForm.append('title_en', formData.title_en);
+        editForm.append('title_en', formData.title_en.trim() ? `${TITLE_PREFIX_EN} ${formData.title_en.trim()}` : '');
         editForm.append('content_en', formData.content_en);
         editForm.append('contact_role', formData.contact_role);
         editForm.append('contact_name', formData.contact_name);
@@ -173,7 +174,7 @@ function RequestForm({
       form.append('leader_name', formData.leader_name);
       form.append('title', `${TITLE_PREFIX} ${formData.title.trim()}`);
       form.append('content', formData.content);
-      form.append('title_en', formData.title_en);
+      form.append('title_en', formData.title_en.trim() ? `${TITLE_PREFIX_EN} ${formData.title_en.trim()}` : '');
       form.append('content_en', formData.content_en);
       form.append('contact_role', formData.contact_role);
       form.append('contact_name', formData.contact_name);
@@ -272,14 +273,19 @@ function RequestForm({
 
           <div>
             <Label optional>영문 공지 제목</Label>
-            <input
-              type="text"
-              name="title_en"
-              value={formData.title_en}
-              onChange={handleChange}
-              placeholder="English title"
-              className={fieldClass}
-            />
+            <div className="flex items-center rounded-[14px] border border-line bg-canvas focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
+              <span className="shrink-0 select-none whitespace-nowrap pl-4 text-base font-semibold text-primary">
+                {TITLE_PREFIX_EN}
+              </span>
+              <input
+                type="text"
+                name="title_en"
+                value={formData.title_en}
+                onChange={handleChange}
+                placeholder="English title"
+                className="w-full bg-transparent px-2 py-3.5 text-base text-foreground placeholder:text-muted focus:outline-none"
+              />
+            </div>
           </div>
 
           <div>

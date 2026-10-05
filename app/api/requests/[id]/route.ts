@@ -48,7 +48,8 @@ export async function PUT(
       .trim();
     const content = field('content');
     const scheduled_date = field('scheduled_date');
-    const title_en = field('title_en');
+    const titleEnBody = field('title_en').replace(/^\[Changmun Festival\]\s*/i, '').trim();
+    const title_en = titleEnBody ? `[Changmun Festival] ${titleEnBody}` : '';
     const content_en = field('content_en');
     const contact_role = field('contact_role');
     const contact_name = field('contact_name');

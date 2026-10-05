@@ -11,7 +11,11 @@ export async function POST(request: NextRequest) {
     const rawTitle = ((formData.get('title') as string) || '').trim();
     const content = formData.get('content') as string;
     const scheduled_date = formData.get('scheduled_date') as string;
-    const title_en = ((formData.get('title_en') as string) || '').trim();
+    const titleEnBody = ((formData.get('title_en') as string) || '')
+      .trim()
+      .replace(/^\[Changmun Festival\]\s*/i, '')
+      .trim();
+    const title_en = titleEnBody ? `[Changmun Festival] ${titleEnBody}` : '';
     const content_en = ((formData.get('content_en') as string) || '').trim();
     const contact_role = ((formData.get('contact_role') as string) || '').trim();
     const contact_name = ((formData.get('contact_name') as string) || '').trim();
