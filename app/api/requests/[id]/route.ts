@@ -50,6 +50,9 @@ export async function PUT(
     const scheduled_date = field('scheduled_date');
     const title_en = field('title_en');
     const content_en = field('content_en');
+    const contact_role = field('contact_role');
+    const contact_name = field('contact_name');
+    const contact_email = field('contact_email');
 
     let removeIds: string[] = [];
     try {
@@ -61,6 +64,19 @@ export async function PUT(
     if (!team || !leader_name || !titleBody || !content || !scheduled_date) {
       return NextResponse.json(
         { error: '필수 필드를 입력해주세요' },
+        { status: 400 }
+      );
+    }
+
+    if (!contact_role || !contact_name || !contact_email) {
+      return NextResponse.json(
+        { error: '문의 직책, 이름, 이메일을 입력해주세요' },
+        { status: 400 }
+      );
+    }
+    if (!/^\S+@\S+\.\S+$/.test(contact_email)) {
+      return NextResponse.json(
+        { error: '이메일 형식을 확인해주세요' },
         { status: 400 }
       );
     }
@@ -81,6 +97,9 @@ export async function PUT(
       leader_name,
       title: `[2026 창문축제 TFT] ${titleBody}`,
       content,
+      contact_role,
+      contact_name,
+      contact_email,
       scheduled_date,
       updated_at: new Date().toISOString(),
     };

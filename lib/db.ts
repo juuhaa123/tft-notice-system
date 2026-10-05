@@ -15,6 +15,9 @@ export type NoticeRequest = {
   content: string;
   title_en?: string;
   content_en?: string;
+  contact_role?: string;
+  contact_name?: string;
+  contact_email?: string;
   pinned?: boolean;
   scheduled_date: string;
   status: 'pending' | 'approved' | 'completed';

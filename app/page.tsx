@@ -12,6 +12,9 @@ type NoticeRequest = {
   content: string;
   title_en?: string;
   content_en?: string;
+  contact_role?: string;
+  contact_name?: string;
+  contact_email?: string;
   pinned?: boolean;
   scheduled_date: string;
   status: Status;
@@ -72,6 +75,9 @@ function RequestForm({
     content: initial?.content ?? '',
     title_en: initial?.title_en ?? '',
     content_en: initial?.content_en ?? '',
+    contact_role: initial?.contact_role ?? '',
+    contact_name: initial?.contact_name ?? '',
+    contact_email: initial?.contact_email ?? '',
     scheduled_date: initial ? initial.scheduled_date.slice(0, 10) : '',
   });
   const [files, setFiles] = useState<File[]>([]);
@@ -105,6 +111,14 @@ function RequestForm({
       setMessage('모든 필수 항목을 입력해주세요');
       return;
     }
+    if (!formData.contact_role.trim() || !formData.contact_name.trim() || !formData.contact_email.trim()) {
+      setMessage('문의 직책, 이름, 이메일을 모두 입력해주세요');
+      return;
+    }
+    if (!/^\S+@\S+\.\S+$/.test(formData.contact_email.trim())) {
+      setMessage('이메일 형식을 확인해주세요');
+      return;
+    }
 
     const totalSize = files.reduce((sum, f) => sum + f.size, 0);
     if (totalSize > 4 * 1024 * 1024) {
@@ -124,6 +138,9 @@ function RequestForm({
         editForm.append('content', formData.content);
         editForm.append('title_en', formData.title_en);
         editForm.append('content_en', formData.content_en);
+        editForm.append('contact_role', formData.contact_role);
+        editForm.append('contact_name', formData.contact_name);
+        editForm.append('contact_email', formData.contact_email);
         editForm.append('scheduled_date', formData.scheduled_date);
         editForm.append('remove_file_ids', JSON.stringify(removedIds));
         files.forEach(file => editForm.append('files', file));
@@ -145,6 +162,9 @@ function RequestForm({
       form.append('content', formData.content);
       form.append('title_en', formData.title_en);
       form.append('content_en', formData.content_en);
+      form.append('contact_role', formData.contact_role);
+      form.append('contact_name', formData.contact_name);
+      form.append('contact_email', formData.contact_email);
       form.append('scheduled_date', formData.scheduled_date);
       files.forEach(file => form.append('files', file));
 
@@ -223,8 +243,6 @@ function RequestForm({
             <Label required>공지 내용</Label>
             <p className="mb-2 text-xs leading-5 text-muted">
               인사말, 마지막 성경 구절, 시그니처는 고정으로 들어가요. 본문 내용만 적어주세요.
-              <br />
-              맨 마지막에는 [문의] 2026 창문축제 직책 이름 (이메일) 형식으로 적어주세요.
             </p>
             <textarea
               name="content"
@@ -261,6 +279,48 @@ function RequestForm({
             <p className="mt-2 text-xs leading-5 text-muted">
               영문 공지가 필요할 때만 적어주세요. 인사말, 성경 구절, 시그니처는 여기도 고정으로 들어가요.
             </p>
+          </div>
+
+          <div>
+            <Label required>문의 정보</Label>
+            <p className="mb-2 text-xs leading-5 text-muted">
+              공지 맨 마지막에 [문의] 2026 창문축제 직책 이름 (이메일) 형식으로 들어가요.
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <p className="mb-1 text-xs font-semibold text-body">문의 직책</p>
+                <input
+                  type="text"
+                  name="contact_role"
+                  value={formData.contact_role}
+                  onChange={handleChange}
+                  placeholder="예) 총학생회장"
+                  className={fieldClass}
+                />
+              </div>
+              <div>
+                <p className="mb-1 text-xs font-semibold text-body">이름</p>
+                <input
+                  type="text"
+                  name="contact_name"
+                  value={formData.contact_name}
+                  onChange={handleChange}
+                  placeholder="이름"
+                  className={fieldClass}
+                />
+              </div>
+            </div>
+            <div className="mt-3">
+              <p className="mb-1 text-xs font-semibold text-body">이메일</p>
+              <input
+                type="email"
+                name="contact_email"
+                value={formData.contact_email}
+                onChange={handleChange}
+                placeholder="example@gmail.com"
+                className={fieldClass}
+              />
+            </div>
           </div>
 
           <div>
@@ -592,6 +652,12 @@ export default function Home() {
                         </p>
                       )}
                     </div>
+                  )}
+
+                  {request.contact_role && request.contact_name && request.contact_email && (
+                    <p className="mt-3 break-all text-sm text-muted">
+                      [문의] 2026 창문축제 {request.contact_role} {request.contact_name} ({request.contact_email})
+                    </p>
                   )}
 
                   {files.length > 0 && (
