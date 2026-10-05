@@ -294,7 +294,7 @@ function RequestForm({
                   name="contact_role"
                   value={formData.contact_role}
                   onChange={handleChange}
-                  placeholder="예) 총학생회장"
+                  placeholder="예) 2026 창문축제 무대운영팀장"
                   className={fieldClass}
                 />
               </div>
@@ -656,7 +656,8 @@ export default function Home() {
 
                   {request.contact_role && request.contact_name && request.contact_email && (
                     <p className="mt-3 break-all text-sm text-muted">
-                      [문의] 2026 창문축제 {request.contact_role} {request.contact_name} ({request.contact_email})
+                      [문의] {request.contact_role.startsWith('2026 창문축제') ? '' : '2026 창문축제 '}
+                      {request.contact_role} {request.contact_name} ({request.contact_email})
                     </p>
                   )}
 
