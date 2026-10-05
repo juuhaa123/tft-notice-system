@@ -221,6 +221,11 @@ function RequestForm({
 
           <div>
             <Label required>공지 내용</Label>
+            <p className="mb-2 text-xs leading-5 text-muted">
+              인사말, 마지막 성경 구절, 시그니처는 고정으로 들어가요. 본문 내용만 적어주세요.
+              <br />
+              맨 마지막에는 [문의] 이름 이메일을 적어주세요.
+            </p>
             <textarea
               name="content"
               value={formData.content}
@@ -229,9 +234,6 @@ function RequestForm({
               rows={6}
               className={`${fieldClass} resize-none`}
             />
-            <p className="mt-2 text-xs leading-5 text-muted">
-              인사말, 마지막 성경 구절, 시그니처는 고정으로 들어가요. 본문 내용만 적어주세요.
-            </p>
           </div>
 
           <div>
