@@ -53,6 +53,9 @@ export async function PUT(
     const contact_role = field('contact_role');
     const contact_name = field('contact_name');
     const contact_email = field('contact_email');
+    const contact_role_en = field('contact_role_en');
+    const contact_name_en = field('contact_name_en');
+    const contact_email_en = field('contact_email_en');
 
     let removeIds: string[] = [];
     try {
@@ -74,7 +77,7 @@ export async function PUT(
         { status: 400 }
       );
     }
-    if (!/^\S+@\S+\.\S+$/.test(contact_email)) {
+    if (!/^\S+@\S+\.\S+$/.test(contact_email) || (contact_email_en && !/^\S+@\S+\.\S+$/.test(contact_email_en))) {
       return NextResponse.json(
         { error: '이메일 형식을 확인해주세요' },
         { status: 400 }
@@ -105,6 +108,12 @@ export async function PUT(
     };
     delete updated.title_en;
     delete updated.content_en;
+    delete updated.contact_role_en;
+    delete updated.contact_name_en;
+    delete updated.contact_email_en;
+    if (contact_role_en) updated.contact_role_en = contact_role_en;
+    if (contact_name_en) updated.contact_name_en = contact_name_en;
+    if (contact_email_en) updated.contact_email_en = contact_email_en;
     if (title_en) updated.title_en = title_en;
     if (content_en) updated.content_en = content_en;
 

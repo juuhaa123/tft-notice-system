@@ -16,6 +16,9 @@ export async function POST(request: NextRequest) {
     const contact_role = ((formData.get('contact_role') as string) || '').trim();
     const contact_name = ((formData.get('contact_name') as string) || '').trim();
     const contact_email = ((formData.get('contact_email') as string) || '').trim();
+    const contact_role_en = ((formData.get('contact_role_en') as string) || '').trim();
+    const contact_name_en = ((formData.get('contact_name_en') as string) || '').trim();
+    const contact_email_en = ((formData.get('contact_email_en') as string) || '').trim();
 
     const titleBody = rawTitle.replace(/^(\[2026 창문축제 TFT\]|\[창문축제\])\s*/, '').trim();
     const title = `[2026 창문축제 TFT] ${titleBody}`;
@@ -32,7 +35,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    if (!/^\S+@\S+\.\S+$/.test(contact_email)) {
+    if (!/^\S+@\S+\.\S+$/.test(contact_email) || (contact_email_en && !/^\S+@\S+\.\S+$/.test(contact_email_en))) {
       return NextResponse.json(
         { error: '이메일 형식을 확인해주세요' },
         { status: 400 }
@@ -54,6 +57,9 @@ export async function POST(request: NextRequest) {
       contact_role,
       contact_name,
       contact_email,
+      ...(contact_role_en && { contact_role_en }),
+      ...(contact_name_en && { contact_name_en }),
+      ...(contact_email_en && { contact_email_en }),
       scheduled_date,
       status: 'pending',
       created_at: now,
