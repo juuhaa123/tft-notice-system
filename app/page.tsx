@@ -342,7 +342,7 @@ function RequestForm({
           <div>
             <Label optional>영문 문의 정보</Label>
             <p className="mb-2 text-xs leading-5 text-muted">
-              영문 공지가 필요할 때만 적어주세요. 영문 이메일을 비워두면 위의 이메일이 들어가요.
+              영문 공지가 필요할 때만 적어주세요. 공지 맨 마지막에 [Contact] 2026 Changmun Festival TFT Position Name (Email) 형식으로 들어가요. 영문 이메일을 비워두면 위의 이메일이 들어가요.
             </p>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -399,7 +399,7 @@ function RequestForm({
                 ? '한 번에 4MB까지 업로드할 수 있어요. 더 올릴 파일은 저장한 뒤 다시 수정하기에서 추가해 주세요.'
                 : '한 번에 4MB까지 업로드할 수 있어요. 여러 개를 올려야 한다면 등록 후 수정하기에서 추가로 올려주세요.'}
               <br />
-              영문으로 공지한다면 영문 포스터도 함께 첨부해주세요.
+              영문으로 공지한다면 영문 버전도 첨부해주세요.
             </p>
 
             {isEdit && existingFiles.filter(f => !removedIds.includes(f.id)).length > 0 && (
@@ -717,7 +717,8 @@ export default function Home() {
 
                   {request.contact_role_en && request.contact_name_en && (
                     <p className="mt-1 break-all text-sm text-muted">
-                      [Contact] {request.contact_role_en} {request.contact_name_en} (
+                      [Contact] {request.contact_role_en.startsWith('2026 Changmun Festival TFT') ? '' : '2026 Changmun Festival TFT '}
+                      {request.contact_role_en} {request.contact_name_en} (
                       {request.contact_email_en || request.contact_email})
                     </p>
                   )}
