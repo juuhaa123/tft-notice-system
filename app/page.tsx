@@ -683,7 +683,12 @@ export default function Home() {
                     <span>{request.leader_name}</span>
                   </div>
                   <h2 className={`text-lg font-semibold ${done ? 'text-muted' : 'text-foreground'}`}>{request.title}</h2>
-                  <p className="mt-1 text-sm text-body">게시 희망 {formatDay(request.scheduled_date)}</p>
+                  <p className="mt-2 flex items-center gap-2 text-sm text-body">
+                    게시 희망
+                    <span className="rounded-md bg-weak px-2 py-0.5 font-bold text-primary">
+                      {formatDay(request.scheduled_date)}
+                    </span>
+                  </p>
 
                   <p
                     className={`mt-3 whitespace-pre-wrap text-sm leading-6 text-body ${isOpen ? '' : 'line-clamp-3'}`}
