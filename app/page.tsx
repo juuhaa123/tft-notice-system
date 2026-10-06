@@ -630,6 +630,8 @@ export default function Home() {
               <li>포스터를 PNG와 PDF로 함께 첨부해주세요.</li>
               <li>공지 내용에서 포스터가 들어갈 자리에 (포스터)라고 적어주세요.</li>
             </ol>
+            <p className="mb-1 mt-4 text-sm font-semibold text-foreground">첨부파일을 올릴 때는</p>
+            <p className="text-sm leading-6 text-body">파일 이름을 “2026 창문축제 ○○○” 형식으로 바꿔서 올려주세요.</p>
           </div>
           {isAdmin && (
             <div className="mt-4 flex items-center justify-between rounded-[14px] bg-weak px-4 py-3 text-sm font-semibold text-weak-fg">
