@@ -568,7 +568,7 @@ export default function Home() {
   };
 
   const handleStatusChange = async (id: string, status: Status) => {
-    const res = await fetch(`/api/requests/${id}?token=${encodeURIComponent(token)}`, {
+    const res = await fetch(`/api/requests/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status }),
@@ -576,7 +576,7 @@ export default function Home() {
     if (res.ok) {
       setRequests(prev => prev.map(r => (r.id === id ? { ...r, status } : r)));
     } else {
-      alert('상태를 바꾸지 못했어요. 관리자 모드를 다시 확인해주세요.');
+      alert('상태를 바꾸지 못했어요. 잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -635,7 +635,7 @@ export default function Home() {
           </div>
           {isAdmin && (
             <div className="mt-4 flex items-center justify-between rounded-[14px] bg-weak px-4 py-3 text-sm font-semibold text-weak-fg">
-              <span>관리자 모드 · 게시 후 완료로 표시해 주세요</span>
+              <span>관리자 모드 · 삭제와 상단 고정을 할 수 있어요</span>
               <button onClick={handleAdminLogout} className="underline">나가기</button>
             </div>
           )}
@@ -782,9 +782,8 @@ export default function Home() {
                       <select
                         value={request.status === 'approved' ? 'pending' : request.status}
                         onChange={e => handleStatusChange(request.id, e.target.value as Status)}
-                        disabled={!isAdmin}
                         aria-label="게시 상태"
-                        className={`h-10 rounded-[10px] border px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-default ${
+                        className={`h-10 rounded-[10px] border px-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 ${
                           done
                             ? 'border-primary bg-primary text-white'
                             : 'border-line bg-surface text-body'

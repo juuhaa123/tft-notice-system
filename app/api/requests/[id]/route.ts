@@ -162,15 +162,15 @@ export async function PATCH(
     const token = new URL(request.url).searchParams.get('token');
     const adminToken = process.env.ADMIN_TOKEN || 'admin-token';
 
-    if (token !== adminToken) {
+    const body = await request.json();
+    const { status, pinned } = body;
+
+    if (pinned !== undefined && token !== adminToken) {
       return NextResponse.json(
         { error: '권한이 없습니다' },
         { status: 403 }
       );
     }
-
-    const body = await request.json();
-    const { status, pinned } = body;
 
     if (status === undefined && pinned === undefined) {
       return NextResponse.json(
