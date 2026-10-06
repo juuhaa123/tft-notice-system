@@ -738,12 +738,12 @@ export default function Home() {
                   )}
 
                   {files.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                    <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1">
                       {files.map(file => (
                         <a
                           key={file.id}
                           href={`/api/files?path=${encodeURIComponent(file.file_path)}&name=${encodeURIComponent(file.file_name)}`}
-                          className="max-w-full truncate rounded-lg bg-weak px-3 py-1.5 text-sm font-semibold text-weak-fg hover:bg-line"
+                          className="max-w-full truncate text-sm font-semibold text-primary hover:underline"
                         >
                           {file.file_name}
                         </a>
