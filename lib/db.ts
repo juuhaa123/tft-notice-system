@@ -22,6 +22,7 @@ export type NoticeRequest = {
   contact_name_en?: string;
   contact_email_en?: string;
   pinned?: boolean;
+  edited_at?: string;
   scheduled_date: string;
   status: 'pending' | 'approved' | 'completed';
   created_at: string;

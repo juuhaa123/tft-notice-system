@@ -23,6 +23,7 @@ type NoticeRequest = {
   scheduled_date: string;
   status: Status;
   created_at: string;
+  edited_at?: string;
 };
 
 type FileRecord = {
@@ -744,7 +745,10 @@ export default function Home() {
                   )}
 
                   <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
-                    <span className="text-xs text-muted">{formatDate(request.created_at)} 등록</span>
+                    <div className="text-xs leading-5 text-muted">
+                      <p>{formatDate(request.created_at)} 등록</p>
+                      {request.edited_at && <p>{formatDate(request.edited_at)} 수정</p>}
+                    </div>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setEditing(request)}

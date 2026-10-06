@@ -106,6 +106,7 @@ export async function PUT(
       contact_email,
       scheduled_date,
       updated_at: new Date().toISOString(),
+      edited_at: new Date().toISOString(),
     };
     delete updated.title_en;
     delete updated.content_en;
